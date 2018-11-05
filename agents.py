@@ -2,6 +2,7 @@ from collections import namedtuple, defaultdict
 from itertools import count
 import random
 import math
+from typing import List, Tuple
 
 import numpy as np
 import matplotlib
@@ -28,8 +29,13 @@ Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'
 
 
 class ReplayMemory:
+    def __init__(self, capacity: int):
+        """
+        Container for storing transitions encountered by an agent, with a predefined maximum size.
 
-    def __init__(self, capacity):
+        Args:
+            capacity: maximum amount of elements stored
+        """
         self.capacity = capacity
         self.memory = []
         self.position = 0
@@ -49,7 +55,14 @@ class ReplayMemory:
 
 class DQN(nn.Module):
 
-    def __init__(self, in_shape, out_shape):
+    def __init__(self, in_shape: int, out_shape: int):
+        """
+        A regular feed-forward, elu-activated neural network to use for the Deep Q Learning algorithm.
+
+        Args:
+            in_shape:
+            out_shape:
+        """
         super(DQN, self).__init__()
         self.fc1 = nn.Linear(in_shape, 128)
         self.fc2 = nn.Linear(128, 128)
@@ -88,6 +101,17 @@ class DQNAgent:
         self.steps_done = 0
 
     def select_action(self, greedy=False):
+        """
+        Chooses an action to be taken in the current state of the agent's environment.
+        Two strategies are supported: epsilon greedy (default, with greedy=False) or greedy (with greedy=True).
+        If the epsilon-greedy strategy is used, the epsilon value is updated.
+        Args:
+            greedy: bool, whether or not to use a greedy strategy
+
+        Returns:
+            action: int, index of the discretized action that is suggested to be taken
+
+        """
         if greedy:
             with torch.no_grad():
                 return self.policy_net(self.current_state).max(1)[1].view(1, 1).item()
@@ -105,24 +129,33 @@ class DQNAgent:
         else:
             return random.choice(list(self.config['ACTION_DICT'].keys()))
 
-    def add_to_config(self, name, default):
+    def _add_to_config(self, name, default):
+        """
+         Helper method for building the config dictionary.
+        """
         if name in self._proto_config.keys():
             self.config[name] = self._proto_config[name]
         else:
             self.config[name] = default
 
     def get_config(self):
+        """
+        Builds the config dictionary using the proto config provided in the constructor.
+
+        Returns: config, dict: keeps relevant hyperparameters for the agent
+
+        """
         self.config = {}
 
         # Add necessary parameters
-        self.add_to_config('BATCH_SIZE', 128)
-        self.add_to_config('GAMMA', 0.99)
-        self.add_to_config('EPS_START', 0.9)
-        self.add_to_config('EPS_END', 0.05)
-        self.add_to_config('EPS_DECAY', 200)
-        self.add_to_config('TARGET_UPDATE', 10)
-        self.add_to_config('MEMORY_SIZE', 10000)
-        self.add_to_config('ACTION_DICT', {
+        self._add_to_config('BATCH_SIZE', 128)
+        self._add_to_config('GAMMA', 0.99)
+        self._add_to_config('EPS_START', 0.9)
+        self._add_to_config('EPS_END', 0.05)
+        self._add_to_config('EPS_DECAY', 200)
+        self._add_to_config('TARGET_UPDATE', 10)
+        self._add_to_config('MEMORY_SIZE', 10000)
+        self._add_to_config('ACTION_DICT', {
             0: [.0, -.1],
             1: [.0, .1],
             2: [.1, -.1],
@@ -142,13 +175,26 @@ class DQNAgent:
         return self.config
 
     def take_action(self, action=None, remember=True, greedy=False):
+        """
+        Acts upon the environment with an indicated or self-chosen action, stores the transition in memory and updates
+        the state of the environment.
+
+        Args:
+            action: None or int: if None, action is selected automatically; else, the index of the preferred action
+            remember: bool, whether or not to store the transition
+            greedy: bool, if action is None, indicates what strategy to use
+
+        Returns:
+            new_state: observation, stored also in self.current_state
+            reward: float, reward for this transition
+            done: bool, whether the episode is finished
+            info: any
+
+        """
         if action is None:
             action = self.select_action(greedy=greedy)
 
         new_state, reward, done, info = self.env.step(self.config['ACTION_DICT'][action])
-
-        #         if done:
-        #             reward = -1
 
         new_state = torch.tensor([new_state], device=device).type(self.type)
         reward = torch.tensor([reward], device=device).type(self.type)
@@ -161,6 +207,13 @@ class DQNAgent:
         return new_state, reward, done, info
 
     def optimize_model(self):
+        """
+        If there are enough transitions in the memory, perform a single DQ learning update using
+        randomly sampled transitions.
+
+        Returns:
+        bool: whether the update was performed
+        """
         BATCH_SIZE, GAMMA = self.config['BATCH_SIZE'], self.config['GAMMA']
 
         if len(self.memory) < BATCH_SIZE:
@@ -203,8 +256,16 @@ class DQNAgent:
         return True
 
     def reset(self):
+        """
+        Resets the environment and updates the current state.
+        Returns:
+        observation
+        """
         self.current_state = torch.tensor([self.env.reset()], device=device).type(self.type)
         return self.current_state
 
     def update_target(self):
+        """
+        Updates the target network with the policy network's weights
+        """
         self.target_net.load_state_dict(self.policy_net.state_dict())
