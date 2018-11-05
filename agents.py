@@ -21,9 +21,9 @@ import gym
 
 from tqdm import tqdm
 
-device = torch.device('cuda' if torch.cuda.is_available() else  'cpu')
-print(device)
-float_type = torch.cuda.FloatTensor if device == 'cuda' else torch.FloatTensor
+# device = torch.device('cuda' if torch.cuda.is_available() else  'cpu')
+# print(device)
+# float_type = torch.cuda.FloatTensor if device == 'cuda' else torch.FloatTensor
 
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
 
@@ -82,13 +82,13 @@ class DQNAgent:
         self.type = type_
         self.current_state = self.reset()
 
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self._proto_config = config
         self.config = self.get_config()
 
-        self.policy_net = DQN(in_shape, out_shape).to(device).type(self.type)
-        self.target_net = DQN(in_shape, out_shape).to(device).type(self.type)
+        self.policy_net = DQN(in_shape, out_shape).to(self.device).type(self.type)
+        self.target_net = DQN(in_shape, out_shape).to(self.device).type(self.type)
 
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
@@ -196,8 +196,8 @@ class DQNAgent:
 
         new_state, reward, done, info = self.env.step(self.config['ACTION_DICT'][action])
 
-        new_state = torch.tensor([new_state], device=device).type(self.type)
-        reward = torch.tensor([reward], device=device).type(self.type)
+        new_state = torch.tensor([new_state], device=self.device).type(self.type)
+        reward = torch.tensor([reward], device=self.device).type(self.type)
 
         if remember:
             self.memory.push(self.current_state, action, new_state, reward)
@@ -228,7 +228,7 @@ class DQNAgent:
 
         #
         state_batch = torch.cat(batch.state).type(self.type)
-        action_batch = torch.tensor(batch.action, device=device).view(-1, 1)
+        action_batch = torch.tensor(batch.action, device=self.device).view(-1, 1)
         reward_batch = torch.cat(batch.reward).type(self.type)
         next_state_batch = torch.cat(batch.next_state).type(self.type)
 
@@ -261,7 +261,7 @@ class DQNAgent:
         Returns:
         observation
         """
-        self.current_state = torch.tensor([self.env.reset()], device=device).type(self.type)
+        self.current_state = torch.tensor([self.env.reset()], device=self.device).type(self.type)
         return self.current_state
 
     def update_target(self):
