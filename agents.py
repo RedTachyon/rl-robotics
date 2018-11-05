@@ -1,25 +1,12 @@
 from collections import namedtuple, defaultdict
-from itertools import count
 import random
 import math
-from typing import List, Tuple
-
-import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-import pybullet as p
-import pybullet_envs as pe
-
-import gym
-
-from tqdm import tqdm
 
 # device = torch.device('cuda' if torch.cuda.is_available() else  'cpu')
 # print(device)
@@ -80,9 +67,10 @@ class DQNAgent:
     def __init__(self, env, in_shape: int, out_shape: int, config: dict, type_=torch.cuda.FloatTensor):
         self.env = env
         self.type = type_
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
         self.current_state = self.reset()
 
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self._proto_config = config
         self.config = self.get_config()
