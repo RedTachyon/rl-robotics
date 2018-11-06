@@ -2,6 +2,8 @@ from collections import namedtuple, defaultdict
 import random
 import math
 
+import numpy as np
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -62,6 +64,24 @@ class DQN(nn.Module):
         return self.head(x)
 
 
+class Agent:
+    def __init__(self):
+        raise NotImplementedError
+
+    def select_action(self, greedy=False):
+        raise NotImplementedError
+
+    def take_action(self, action=None):
+        raise NotImplementedError
+
+    def optimize_model(self):
+        raise NotImplementedError
+
+    def reset(self):
+        raise NotImplementedError
+
+
+
 class DQNAgent:
 
     def __init__(self, env, in_shape: int, out_shape: int, config: dict, type_=torch.cuda.FloatTensor):
@@ -70,7 +90,6 @@ class DQNAgent:
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         self.current_state = self.reset()
-
 
         self._proto_config = config
         self.config = self.get_config()
@@ -136,7 +155,7 @@ class DQNAgent:
         self.config = {}
 
         # Add necessary parameters
-        self._add_to_config('BATCH_SIZE', 128)
+        self._add_to_config('BATCH_SIZE', 32)
         self._add_to_config('GAMMA', 0.99)
         self._add_to_config('EPS_START', 0.9)
         self._add_to_config('EPS_END', 0.05)
@@ -257,3 +276,8 @@ class DQNAgent:
         Updates the target network with the policy network's weights
         """
         self.target_net.load_state_dict(self.policy_net.state_dict())
+
+    def is_success(self, dist=.1):
+        x_t, y_t = self.current_state[2], self.current_state[3]
+
+        return np.linalg.norm([x_t, y_t]) < dist
