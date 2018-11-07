@@ -1,4 +1,4 @@
-from typing import Optional, Dict
+from typing import Optional, Dict, Type, Tuple
 
 import numpy as np
 
@@ -66,7 +66,7 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int=5000, config: Optional[Dic
     return agent
 
 
-def evaluate_model(agent, num_episodes):
+def evaluate_model(agent: Agent, num_episodes: int=1000) -> float:
 
     test_episode_scores = []
 
@@ -93,6 +93,8 @@ def evaluate_model(agent, num_episodes):
 
     return mean_score
 
+def save_agent(agent, path):
+    to_save = (agent.__class__, agent.policy_net)
 
-def load_model(path: str) -> Agent:
+def load_agent(path: str) -> Agent:
     pass # TODO: implement this

@@ -1,4 +1,5 @@
 from collections import namedtuple, defaultdict
+import copy
 import random
 import math
 
@@ -71,7 +72,7 @@ class Agent:
     def select_action(self, greedy=False):
         raise NotImplementedError
 
-    def take_action(self, action=None):
+    def take_action(self, action=None, remember=True, greedy=False):
         raise NotImplementedError
 
     def optimize_model(self):
@@ -291,6 +292,27 @@ class DQNAgent(Agent):
         Updates the target network with the policy network's weights
         """
         self.target_net.load_state_dict(self.policy_net.state_dict())
+
+    def load_model(self, model: nn.Module):
+        """
+        Loads the pretrained model parameters.
+
+        Args:
+            model: PyTorch model to be used
+
+        """
+        self.policy_net.load_state_dict(model.state_dict())
+        self.update_target()
+
+    def save_agent(self, path):
+        agent_copy = copy.deepcopy(self)
+        agent_copy.env = None
+
+        # TODO: implement this, save the env-less agent and the env somehow
+
+    @staticmethod
+    def load_agent(path):
+        raise NotImplementedError
 
     def is_success(self, dist=.1):
         x_t, y_t = self.current_state[2], self.current_state[3]
