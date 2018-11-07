@@ -8,6 +8,8 @@
 
 - A2C
 
+- HER (Hindsight Experience Replay)
+
 
 2. Performance metrics
 
@@ -18,9 +20,9 @@
 
 3. General
 
-- training loop function
+- training loop function ✓
 
-- evaluation function
+- evaluation function ✓
 
 
 
