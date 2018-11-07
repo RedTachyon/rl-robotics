@@ -10,7 +10,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
-# device = torch.device('cuda' if torch.cuda.is_available() else  'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # print(device)
 # float_type = torch.cuda.FloatTensor if device == 'cuda' else torch.FloatTensor
 
@@ -66,7 +66,7 @@ class DQN(nn.Module):
 
 class Agent:
     def __init__(self):
-        raise NotImplementedError
+        pass
 
     def select_action(self, greedy=False):
         raise NotImplementedError
@@ -81,21 +81,36 @@ class Agent:
         raise NotImplementedError
 
 
+class DQNAgent(Agent):
+    # TODO: add .cpu() .cuda() methods
+    # TODO: integrate the success rate history
+    def __init__(self, env, config: dict, device='cpu'):
+        """
+        Basic agent for interacting with an environment, using a Deep Q Learning algorithm with discrete actions.
 
-class DQNAgent:
+        Args:
+            env: environment in which the agent will operate
+            config: dictionary containing relevant parameters for the agent;
+            device: indicates on what device the agent should run; either 'cpu' or 'cuda'
+        """
+        super(DQNAgent, self).__init__()
 
-    def __init__(self, env, in_shape: int, out_shape: int, config: dict, type_=torch.cuda.FloatTensor):
         self.env = env
-        self.type = type_
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = device
+        assert self.device in ['cpu', 'cuda'], ValueError("Device should be either 'cpu' or 'cuda'")
+
+        self.type = torch.FloatTensor if self.device == 'cpu' else torch.cuda.FloatTensor
 
         self.current_state = self.reset()
 
         self._proto_config = config
         self.config = self.get_config()
 
-        self.policy_net = DQN(in_shape, out_shape).to(self.device).type(self.type)
-        self.target_net = DQN(in_shape, out_shape).to(self.device).type(self.type)
+        self.in_shape = self.env.observation_space.shape[0]
+        self.out_shape = len(self.config['ACTION_DICT'])
+
+        self.policy_net = DQN(self.in_shape, self.out_shape).to(self.device).type(self.type)
+        self.target_net = DQN(self.in_shape, self.out_shape).to(self.device).type(self.type)
 
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()

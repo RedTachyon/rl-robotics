@@ -16,6 +16,11 @@
 - success rate (to implement)
 
 
+3. General
+
+- training loop function
+
+- evaluation function
 
 
 
