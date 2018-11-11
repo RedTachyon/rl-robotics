@@ -3,6 +3,8 @@ import copy
 import random
 import math
 
+from gym.wrappers import TimeLimit
+
 import numpy as np
 
 import torch
@@ -67,7 +69,7 @@ class DQN(nn.Module):
 
 class Agent:
     def __init__(self):
-        pass
+        self.env = None
 
     def select_action(self, greedy=False):
         raise NotImplementedError
@@ -81,10 +83,12 @@ class Agent:
     def reset(self):
         raise NotImplementedError
 
+    def is_success(self) -> bool:
+        raise NotImplementedError
+
 
 class DQNAgent(Agent):
     # TODO: add .cpu() .cuda() methods
-    # TODO: integrate the success rate history
     def __init__(self, env, config: dict, device='cpu'):
         """
         Basic agent for interacting with an environment, using a Deep Q Learning algorithm with discrete actions.
@@ -304,17 +308,48 @@ class DQNAgent(Agent):
         self.policy_net.load_state_dict(model.state_dict())
         self.update_target()
 
-    def save_agent(self, path):
+    def save(self, path: str):
+        """
+        Saves the state of the agent, including its internal weights and parameters.
+
+        Args:
+            path: path of the saved agent
+
+        """
         agent_copy = copy.deepcopy(self)
         agent_copy.env = None
 
-        # TODO: implement this, save the env-less agent and the env somehow
+        torch.save(agent_copy, path)
 
     @staticmethod
-    def load_agent(path):
-        raise NotImplementedError
+    def load_agent(path: str, env: TimeLimit) -> Agent:
+        """
+        Loads the agent and attaches it to an environment.
 
-    def is_success(self, dist=.1):
-        x_t, y_t = self.current_state[2], self.current_state[3]
+        Args:
+            path: path of the saved agent
+            env: environment that should be attached to the agent
+
+        Returns:
+            Agent
+
+        """
+        agent = torch.load(path)
+        agent.env = env
+        agent.reset()
+        return agent
+
+    def is_success(self, dist: float=.05) -> bool:
+        """
+        Checks whether the current state of the agent is successful
+        Args:
+            dist: error tolerance
+
+        Returns:
+            whether the state is considered successful
+
+        """
+        state = self.current_state.cpu().numpy().ravel()
+        x_t, y_t = state[2], state[3]
 
         return np.linalg.norm([x_t, y_t]) < dist
