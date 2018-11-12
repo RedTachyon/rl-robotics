@@ -88,7 +88,9 @@ class Agent:
 
 
 class DQNAgent(Agent):
-    # TODO: add .cpu() .cuda() methods
+    # TODO add .cpu() .cuda() methods
+    # TODO Add reachability analysis (need to find length of the manipulator)
+    # TODO refactor, add ./agents folder and stuff like that
     def __init__(self, env, config: dict, device='cpu'):
         """
         Basic agent for interacting with an environment, using a Deep Q Learning algorithm with discrete actions.
@@ -285,8 +287,9 @@ class DQNAgent(Agent):
     def reset(self):
         """
         Resets the environment and updates the current state.
+
         Returns:
-        observation
+            observation
         """
         self.current_state = torch.tensor([self.env.reset()], device=self.device).type(self.type)
         return self.current_state

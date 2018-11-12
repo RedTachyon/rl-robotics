@@ -95,7 +95,7 @@ def evaluate_model(agent: Agent, num_episodes: int=1000) -> Tuple[float, float]:
 
             if done:
                 test_episode_scores.append(ep_score)
-                test_episode_successes.append(ep_success)
+                test_episode_successes.append(int(ep_success))
                 break
 
     test_episode_scores = torch.cat(test_episode_scores).cpu().numpy()
@@ -105,6 +105,8 @@ def evaluate_model(agent: Agent, num_episodes: int=1000) -> Tuple[float, float]:
 
     sns.regplot(np.arange(len(test_episode_successes)), list(accumulate(test_episode_successes)))
     plt.show()
+
+    # print(list(accumulate(test_episode_successes)))
 
     mean_score: float = test_episode_scores.mean()
     success_rate: float = np.mean(test_episode_successes)

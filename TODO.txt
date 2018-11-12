@@ -15,7 +15,7 @@
 
 - default reward ✓
 
-- success rate (to implement)
+- success rate (to implement) ✓
 
 
 3. General
