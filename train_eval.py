@@ -14,11 +14,11 @@ from tqdm import tqdm
 
 from agents import DQNAgent, Agent
 
-
 sns.set()
 
 
-def train_dqn_agent(env: TimeLimit, num_episodes: int=5000, config: Optional[Dict]=None, device: str='cpu') -> Agent:
+def train_dqn_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[Dict] = None, device: str = 'cpu',
+                    show: bool = True) -> Agent:
     """
     Trains a DQN agent on an environment for a specified number of episodes.
 
@@ -27,6 +27,7 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int=5000, config: Optional[Dic
         num_episodes: number of episodes the agent should learn on
         config: config dictionary for the agent
         device: device that is supposed to be used for model optimization
+        show: whether plots should be displayed
 
     Returns:
         agent: a trained DQN agent
@@ -65,21 +66,32 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int=5000, config: Optional[Dic
 
     episode_scores = torch.cat(episode_scores).cpu().numpy()
 
-    sns.regplot(np.arange(len(episode_scores)), episode_scores, lowess=True, marker='.')
-    plt.show()
+    if show:
+        sns.regplot(np.arange(len(episode_scores)), episode_scores, lowess=True, marker='.')
+        plt.show()
 
-    sns.regplot(np.arange(len(episode_successes)), list(accumulate(episode_successes)))
-    plt.show()
+        sns.regplot(np.arange(len(episode_successes)), list(accumulate(episode_successes)))
+        plt.show()
 
     return agent
 
 
-def evaluate_model(agent: Agent, num_episodes: int=1000) -> Tuple[float, float]:
+def evaluate_model(agent: Agent, num_episodes: int = 1000, show: bool = True) -> Tuple[float, float]:
+    """
+    Evaluates the agent on its environment for a specified number of episodes
 
+    Args:
+        agent:
+        num_episodes:
+        show:
+
+    Returns:
+
+    """
     test_episode_scores = []
     test_episode_successes = []
 
-    for i_episode in tqdm(range(num_episodes)):
+    for _ in tqdm(range(num_episodes)):
         agent.reset()
 
         ep_score = 0
@@ -100,11 +112,12 @@ def evaluate_model(agent: Agent, num_episodes: int=1000) -> Tuple[float, float]:
 
     test_episode_scores = torch.cat(test_episode_scores).cpu().numpy()
 
-    sns.regplot(np.arange(len(test_episode_scores)), test_episode_scores, marker='.')
-    plt.show()
+    if show:
+        sns.regplot(np.arange(len(test_episode_scores)), test_episode_scores, marker='.')
+        plt.show()
 
-    sns.regplot(np.arange(len(test_episode_successes)), list(accumulate(test_episode_successes)))
-    plt.show()
+        sns.regplot(np.arange(len(test_episode_successes)), list(accumulate(test_episode_successes)))
+        plt.show()
 
     # print(list(accumulate(test_episode_successes)))
 

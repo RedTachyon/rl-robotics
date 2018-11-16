@@ -1,4 +1,5 @@
 from collections import namedtuple, defaultdict
+from typing import Type, Optional
 import copy
 import random
 import math
@@ -38,7 +39,7 @@ class ReplayMemory:
         self.memory[self.position] = Transition(*args)
         self.position = (self.position + 1) % self.capacity
 
-    def sample(self, batch_size):
+    def sample(self, batch_size: int):
         return random.sample(self.memory, batch_size)
 
     def __len__(self):
@@ -71,10 +72,10 @@ class Agent:
     def __init__(self):
         self.env = None
 
-    def select_action(self, greedy=False):
+    def select_action(self, greedy: bool = False):
         raise NotImplementedError
 
-    def take_action(self, action=None, remember=True, greedy=False):
+    def take_action(self, action: Optional[int] = None, remember: bool = True, greedy: bool = False):
         raise NotImplementedError
 
     def optimize_model(self):
@@ -88,10 +89,10 @@ class Agent:
 
 
 class DQNAgent(Agent):
-    # TODO add .cpu() .cuda() methods
     # TODO Add reachability analysis (need to find length of the manipulator)
     # TODO refactor, add ./agents folder and stuff like that
-    def __init__(self, env, config: dict, device='cpu'):
+    # TODO Variablify the network that the agent will use
+    def __init__(self, env, config: dict, device: str = 'cpu', network: Type = DQN):
         """
         Basic agent for interacting with an environment, using a Deep Q Learning algorithm with discrete actions.
 
@@ -99,6 +100,7 @@ class DQNAgent(Agent):
             env: environment in which the agent will operate
             config: dictionary containing relevant parameters for the agent;
             device: indicates on what device the agent should run; either 'cpu' or 'cuda'
+            network: torch NN model subclassing nn.Module with two inputs, in_shape and out_shape
         """
         super(DQNAgent, self).__init__()
 
@@ -116,8 +118,8 @@ class DQNAgent(Agent):
         self.in_shape = self.env.observation_space.shape[0]
         self.out_shape = len(self.config['ACTION_DICT'])
 
-        self.policy_net = DQN(self.in_shape, self.out_shape).to(self.device).type(self.type)
-        self.target_net = DQN(self.in_shape, self.out_shape).to(self.device).type(self.type)
+        self.policy_net = network(self.in_shape, self.out_shape).to(self.device).type(self.type)
+        self.target_net = network(self.in_shape, self.out_shape).to(self.device).type(self.type)
 
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
@@ -356,3 +358,12 @@ class DQNAgent(Agent):
         x_t, y_t = state[2], state[3]
 
         return np.linalg.norm([x_t, y_t]) < dist
+
+    def cpu(self):
+        self.policy_net = self.policy_net.cpu()
+        self.target_net = self.target_net.cpu()
+        return self
+
+    def cuda(self):
+        self.policy_net = self.policy_net.gpu()
+        self.target_net = self.target_net.gpu()
