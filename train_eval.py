@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Type, Tuple
+from typing import Optional, Dict, Tuple
 from itertools import accumulate
 
 import numpy as np
@@ -12,7 +12,7 @@ import torch
 
 from tqdm import tqdm
 
-from agents import DQNAgent, Agent
+from agents.DQN import DQNAgent, Agent
 
 sns.set()
 
@@ -58,7 +58,7 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[D
 
             if done:
                 episode_scores.append(ep_score)
-                episode_successes.append(ep_success)
+                episode_successes.append(int(ep_success))
                 break
 
         if i_episode % agent.config['TARGET_UPDATE'] == 0:
@@ -70,7 +70,7 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[D
         sns.regplot(np.arange(len(episode_scores)), episode_scores, lowess=True, marker='.')
         plt.show()
 
-        sns.regplot(np.arange(len(episode_successes)), list(accumulate(episode_successes)))
+        sns.regplot(np.arange(len(episode_successes)), list(accumulate(episode_successes)), marker='.')
         plt.show()
 
     return agent
@@ -116,7 +116,7 @@ def evaluate_model(agent: Agent, num_episodes: int = 1000, show: bool = True) ->
         sns.regplot(np.arange(len(test_episode_scores)), test_episode_scores, marker='.')
         plt.show()
 
-        sns.regplot(np.arange(len(test_episode_successes)), list(accumulate(test_episode_successes)))
+        sns.regplot(np.arange(len(test_episode_successes)), list(accumulate(test_episode_successes)), marker='.')
         plt.show()
 
     # print(list(accumulate(test_episode_successes)))

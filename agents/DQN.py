@@ -13,86 +13,17 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
+from models.ffn import FFN
+from agents.utils import Agent, ReplayMemory, Transition
 
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # print(device)
 # float_type = torch.cuda.FloatTensor if device == 'cuda' else torch.FloatTensor
 
-Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
-
-
-class ReplayMemory:
-    def __init__(self, capacity: int):
-        """
-        Container for storing transitions encountered by an agent, with a predefined maximum size.
-
-        Args:
-            capacity: maximum amount of elements stored
-        """
-        self.capacity = capacity
-        self.memory = []
-        self.position = 0
-
-    def push(self, *args):
-        if len(self.memory) < self.capacity:
-            self.memory.append(None)
-        self.memory[self.position] = Transition(*args)
-        self.position = (self.position + 1) % self.capacity
-
-    def sample(self, batch_size: int):
-        return random.sample(self.memory, batch_size)
-
-    def __len__(self):
-        return len(self.memory)
-
-
-class DQN(nn.Module):
-
-    def __init__(self, in_shape: int, out_shape: int):
-        """
-        A regular feed-forward, elu-activated neural network to use for the Deep Q Learning algorithm.
-
-        Args:
-            in_shape:
-            out_shape:
-        """
-        super(DQN, self).__init__()
-        self.fc1 = nn.Linear(in_shape, 128)
-        self.fc2 = nn.Linear(128, 128)
-
-        self.head = nn.Linear(128, out_shape)
-
-    def forward(self, x):
-        x = F.elu(self.fc1(x))
-        x = F.elu(self.fc2(x))
-        return self.head(x)
-
-
-class Agent:
-    def __init__(self):
-        self.env = None
-
-    def select_action(self, greedy: bool = False):
-        raise NotImplementedError
-
-    def take_action(self, action: Optional[int] = None, remember: bool = True, greedy: bool = False):
-        raise NotImplementedError
-
-    def optimize_model(self):
-        raise NotImplementedError
-
-    def reset(self):
-        raise NotImplementedError
-
-    def is_success(self) -> bool:
-        raise NotImplementedError
-
 
 class DQNAgent(Agent):
     # TODO Add reachability analysis (need to find length of the manipulator)
-    # TODO refactor, add ./agents folder and stuff like that
-    # TODO Variablify the network that the agent will use
-    def __init__(self, env, config: dict, device: str = 'cpu', network: Type = DQN):
+    def __init__(self, env, config: dict, device: str = 'cpu', network: Type = FFN):
         """
         Basic agent for interacting with an environment, using a Deep Q Learning algorithm with discrete actions.
 
@@ -344,7 +275,7 @@ class DQNAgent(Agent):
         agent.reset()
         return agent
 
-    def is_success(self, dist: float=.05) -> bool:
+    def is_success(self, dist: float=.01) -> bool:
         """
         Checks whether the current state of the agent is successful
         Args:
@@ -365,5 +296,6 @@ class DQNAgent(Agent):
         return self
 
     def cuda(self):
-        self.policy_net = self.policy_net.gpu()
-        self.target_net = self.target_net.gpu()
+        self.policy_net = self.policy_net.cuda()
+        self.target_net = self.target_net.cuda()
+        return self
