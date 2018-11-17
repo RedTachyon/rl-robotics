@@ -12,7 +12,7 @@ import torch
 
 from tqdm import tqdm
 
-from agents.DQN import DQNAgent, Agent
+from src.agents.DQN import DQNAgent, Agent
 
 sns.set()
 

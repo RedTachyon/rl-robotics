@@ -1,8 +1,8 @@
 import sys
 sys.path.append('..')
 
-from collections import namedtuple, defaultdict
-from typing import Type, Optional
+from collections import defaultdict
+from typing import Type
 import copy
 import random
 import math
@@ -16,8 +16,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from models.ffn import FFN
-from agents.utils import Agent, ReplayMemory, Transition
+from src.models import FFN
+from src.agents.utils import Agent, ReplayMemory, Transition
 
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # print(device)
