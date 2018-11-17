@@ -33,5 +33,5 @@ if __name__ == '__main__':
 
     }
 
-    mean_score, success_rate = train_eval_reacher_dqn(5000, 1000, 'cpu')
+    mean_score, success_rate = train_eval_reacher_dqn(100, 100, 'cpu')
     print("Score: %.3f\nSuccess rate: %.3f" % (mean_score, success_rate))

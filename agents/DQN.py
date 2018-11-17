@@ -1,3 +1,6 @@
+import sys
+sys.path.append('..')
+
 from collections import namedtuple, defaultdict
 from typing import Type, Optional
 import copy
