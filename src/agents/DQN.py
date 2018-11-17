@@ -1,5 +1,5 @@
 import os, sys
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/..")
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../..")
 
 from collections import defaultdict
 from typing import Type
@@ -16,8 +16,8 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from src.models.ffn import FFN
-from src.agents.utils import Agent, ReplayMemory, Transition
+from ..models.ffn import FFN
+from ..agents.utils import Agent, ReplayMemory, Transition
 
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # print(device)
