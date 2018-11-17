@@ -1,7 +1,7 @@
 from typing import Dict, Optional, Tuple
 
 import pybullet_envs as pe
-import train_eval as te
+from . import train_eval as te
 
 
 def train_eval_reacher_dqn(num_train: int,
