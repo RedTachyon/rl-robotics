@@ -16,7 +16,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 
-from rlr.models.ffn import FFN
+from ..models.ffn import FFN
 from .utils import Agent, ReplayMemory, Transition
 
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
