@@ -43,7 +43,7 @@ class VPGAgent(Agent):
         var = F.softplus(var)
 
         eps = torch.randn(mu.size()).to(self.device).type(self.type)
-        action = mu + torch.sqrt(var)*eps
+        action = mu + torch.sqrt(var) * eps
 
         return action
 
