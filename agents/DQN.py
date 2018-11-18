@@ -1,8 +1,5 @@
-# import os, sys
-# sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "/../..")
-
 from collections import defaultdict
-from typing import Type
+from typing import Type, Any, Dict, Tuple
 import copy
 import random
 import math
@@ -26,7 +23,8 @@ from .utils import Agent, ReplayMemory, Transition
 
 class DQNAgent(Agent):
     # TODO Add reachability analysis (need to find length of the manipulator)
-    def __init__(self, env, config: dict, device: str = 'cpu', network: Type = FFN):
+    # MAX_LENGTH = 0.21
+    def __init__(self, env: TimeLimit, config: dict, device: str = 'cpu', network: Type = FFN):
         """
         Basic agent for interacting with an environment, using a Deep Q Learning algorithm with discrete actions.
 
@@ -65,7 +63,7 @@ class DQNAgent(Agent):
 
         self.steps_done = 0
 
-    def select_action(self, greedy=False):
+    def select_action(self, greedy: bool = False) -> int:
         """
         Chooses an action to be taken in the current state of the agent's environment.
         Two strategies are supported: epsilon greedy (default, with greedy=False) or greedy (with greedy=True).
@@ -94,7 +92,7 @@ class DQNAgent(Agent):
         else:
             return random.choice(list(self.config['ACTION_DICT'].keys()))
 
-    def _add_to_config(self, name, default):
+    def _add_to_config(self, name: str, default: Any):
         """
          Helper method for building the config dictionary.
         """
@@ -103,7 +101,7 @@ class DQNAgent(Agent):
         else:
             self.config[name] = default
 
-    def get_config(self):
+    def get_config(self) -> Dict[str, Any]:
         """
         Builds the config dictionary using the proto config provided in the constructor.
 
@@ -278,7 +276,7 @@ class DQNAgent(Agent):
         agent.reset()
         return agent
 
-    def is_success(self, dist: float=.01) -> bool:
+    def is_success(self, dist: float=.02) -> bool:
         """
         Checks whether the current state of the agent is successful
         Args:
@@ -292,6 +290,16 @@ class DQNAgent(Agent):
         x_t, y_t = state[2], state[3]
 
         return np.linalg.norm([x_t, y_t]) < dist
+
+    def is_reachable(self):
+        """
+        Checks whether it's possible to reach the target
+
+        Returns:
+
+        """
+        state = self.current_state.cpu().numpy().ravel()
+        return np.linalg.norm(state[:2]) <= 0.21
 
     def cpu(self):
         self.policy_net = self.policy_net.cpu()
