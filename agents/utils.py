@@ -2,6 +2,8 @@ from collections import namedtuple
 from typing import Optional
 import random
 
+import numpy as np
+
 Transition = namedtuple('Transition', ('state', 'action', 'next_state', 'reward'))
 
 
@@ -34,10 +36,10 @@ class Agent:
     def __init__(self):
         self.env = None
 
-    def select_action(self, greedy: bool = False):
+    def select_action(self):
         raise NotImplementedError
 
-    def take_action(self, action: Optional[int] = None, remember: bool = True, greedy: bool = False):
+    def take_action(self, action: Optional[int] = None, remember: bool = True):
         raise NotImplementedError
 
     def optimize_model(self):
@@ -48,3 +50,12 @@ class Agent:
 
     def is_success(self) -> bool:
         raise NotImplementedError
+
+
+def describe_state(obs):
+    target_x, target_y, to_t_x, to_t_y, costheta, sintheta, thetadot, gamma, gammadot = obs
+
+    print('Target x: %.2f\nTarget y: %.2f\ntip x: %.2f\ntip y: %.2f\ntheta: %.2f\ngamma: %.2f'
+          % (target_x, target_y, target_x + to_t_x, target_y + to_t_y, np.arccos(costheta), gamma))
+
+    print('Length: %.3f' % np.linalg.norm(obs[:2] + obs[2:4]))

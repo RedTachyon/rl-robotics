@@ -67,10 +67,15 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[D
     episode_scores = torch.cat(episode_scores).cpu().numpy()
 
     if show:
-        sns.regplot(np.arange(len(episode_scores)), episode_scores, lowess=True, marker='.')
+        x_score = np.arange(len(episode_scores))
+        y_score = episode_scores
+        sns.regplot(x_score, y_score, lowess=True, marker='.')
         plt.show()
 
-        sns.regplot(np.arange(len(episode_successes)), list(accumulate(episode_successes)), marker='.')
+        x_success = np.arange(len(episode_successes))
+        y_success = np.array(list(accumulate(episode_successes))) / (x_success + 1)
+
+        sns.regplot(x_success, y_success, marker='.')
         plt.show()
 
     return agent
@@ -88,8 +93,8 @@ def evaluate_model(agent: Agent, num_episodes: int = 1000, show: bool = True) ->
     Returns:
 
     """
-    test_episode_scores = []
-    test_episode_successes = []
+    episode_scores = []
+    episode_successes = []
 
     for _ in tqdm(range(num_episodes)):
         agent.reset()
@@ -106,22 +111,25 @@ def evaluate_model(agent: Agent, num_episodes: int = 1000, show: bool = True) ->
                 ep_success = agent.is_success()
 
             if done:
-                test_episode_scores.append(ep_score)
-                test_episode_successes.append(int(ep_success))
+                episode_scores.append(ep_score)
+                episode_successes.append(int(ep_success))
                 break
 
-    test_episode_scores = torch.cat(test_episode_scores).cpu().numpy()
+    test_episode_scores = torch.cat(episode_scores).cpu().numpy()
 
     if show:
-        sns.regplot(np.arange(len(test_episode_scores)), test_episode_scores, marker='.')
+        x_score = np.arange(len(episode_scores))
+        y_score = episode_scores
+        sns.regplot(x_score, y_score, lowess=True, marker='.')
         plt.show()
 
-        sns.regplot(np.arange(len(test_episode_successes)), list(accumulate(test_episode_successes)), marker='.')
-        plt.show()
+        x_success = np.arange(len(episode_successes))
+        y_success = np.array(list(accumulate(episode_successes))) / (x_success + 1)
 
-    # print(list(accumulate(test_episode_successes)))
+        sns.regplot(x_success, y_success, marker='.')
+        plt.show()
 
     mean_score: float = test_episode_scores.mean()
-    success_rate: float = np.mean(test_episode_successes)
+    success_rate: float = np.mean(episode_successes)
 
     return mean_score, success_rate
