@@ -81,6 +81,11 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[D
     return agent
 
 
+def train_vpg_agent():
+    # TODO: implement this
+    pass
+
+
 def evaluate_model(agent: Agent, num_episodes: int = 1000, show: bool = True) -> Tuple[float, float]:
     """
     Evaluates the agent on its environment for a specified number of episodes

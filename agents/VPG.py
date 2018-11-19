@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Type, Optional
+from typing import Type, Optional, Tuple
 import copy
 import random
 import math
@@ -12,6 +12,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
+import torch.nn.utils as utils
 from torch.distributions import MultivariateNormal
 
 from ..models.policy import PolicyFFN
@@ -37,21 +38,84 @@ class VPGAgent(Agent):
         self.out_shape = env.action_space.shape[0]
         self.policy = network(self.in_shape, self.out_shape).to(self.device).type(self.type)
 
-    def select_action(self):
-        with torch.no_grad():
-            mu, var = self.policy(self.current_state)
-        var = F.softplus(var)
+        self.rewards = []
+        self.log_probs = []
 
-        eps = torch.randn(mu.size()).to(self.device).type(self.type)
-        action = mu + torch.sqrt(var) * eps
+        self.optimizer = optim.Adam(self.policy.parameters())
 
-        return action
+    def select_action(self) -> Tuple[torch.Tensor, torch.Tensor]:
+        # with torch.no_grad():
+        mu, var = self.policy(self.current_state)
 
-    def take_action(self, action: Optional[int] = None, remember: bool = True):
-        pass
+        var = F.softplus(var).flatten()
 
-    def optimize_model(self, rewards=None, histories=None):
-        pass
+        dist = MultivariateNormal(loc=mu, covariance_matrix=torch.diag(var))
+
+        action = dist.sample().flatten()
+        logprob = dist.log_prob(action)
+
+        return action, logprob
+
+    def take_action(self, action=None, remember=True, greedy=None):
+        """
+        Acts upon the environment with an indicated or self-chosen action, stores the transition in memory and updates
+        the state of the environment.
+
+        Args:
+            action: None or list[float]: if None, action is selected automatically; else, the index of the preferred action
+            remember: bool, whether or not to store the transition
+            greedy: unused
+
+        Returns:
+            new_state: observation, stored also in self.current_state
+            reward: float, reward for this transition
+            done: bool, whether the episode is finished
+            info: any
+
+        """
+        logprob = None
+        if action is None:
+            action, logprob = self.select_action()
+
+        new_state, reward, done, info = self.env.step(action.cpu().numpy())
+
+        new_state = torch.tensor([new_state], device=self.device).type(self.type)
+        reward = torch.tensor([reward], device=self.device).type(self.type)
+
+        if remember and logprob is not None:
+            self.rewards.append(reward)
+            self.log_probs.append(logprob)
+
+        self.current_state = new_state
+
+        return new_state, reward, done, info
+
+    def optimize_model(self):
+        GAMMA: float = self.config['GAMMA']
+
+        R = 0
+        policy_loss = []
+        rewards = []
+        for r in self.rewards[::-1]:
+            R = r + GAMMA * R
+            rewards.insert(0, R)
+
+        rewards = torch.tensor(rewards)
+        # Modify rewards to advantage or something
+        # rewards = (rewards - rewards.mean()) / (rewards.std() + eps)
+
+        for log_prob, reward in zip(self.log_probs, rewards):
+            policy_loss.append(-log_prob * reward)
+
+        self.optimizer.zero_grad()
+
+        policy_loss = torch.cat(policy_loss).sum()
+        policy_loss.backward()
+
+        self.optimizer.step()
+
+        del self.rewards[:]
+        del self.log_probs[:]
 
     def reset(self):
         """
@@ -63,8 +127,20 @@ class VPGAgent(Agent):
         self.current_state = torch.tensor([self.env.reset()], device=self.device).type(self.type)
         return self.current_state
 
-    def is_success(self) -> bool:
-        pass
+    def is_success(self, dist: float=.02) -> bool:
+        """
+        Checks whether the current state of the agent is successful
+        Args:
+            dist: error tolerance
+
+        Returns:
+            whether the state is considered successful
+
+        """
+        state = self.current_state.cpu().numpy().ravel()
+        x_t, y_t = state[2], state[3]
+
+        return np.linalg.norm([x_t, y_t]) < dist
 
     def _add_to_config(self, name, default):
         """
@@ -85,24 +161,8 @@ class VPGAgent(Agent):
         self.config = {}
 
         # Add necessary default parameters
-        self._add_to_config('BATCH_SIZE', 32)
-        self._add_to_config('GAMMA', 0.99)
-        self._add_to_config('EPS_START', 0.9)
-        self._add_to_config('EPS_END', 0.05)
-        self._add_to_config('EPS_DECAY', 200)
-        self._add_to_config('TARGET_UPDATE', 10)
-        self._add_to_config('MEMORY_SIZE', 10000)
-        self._add_to_config('ACTION_DICT', {
-            0: [.0, -.1],
-            1: [.0, .1],
-            2: [.1, -.1],
-            3: [.1, .0],
-            4: [.1, .1],
-            5: [-.1, -.1],
-            6: [-.1, .0],
-            7: [-.1, .1],
-            8: [.0, .0]
-        })
+        self._add_to_config('NUM_TRAJECTORIES', 32)
+        self._add_to_config('GAMMA', 0.8)
 
         # Add everything else provided
         for key in self._proto_config.keys():

@@ -35,11 +35,12 @@ class ReplayMemory:
 class Agent:
     def __init__(self):
         self.env = None
+        self.current_state = None
 
     def select_action(self):
         raise NotImplementedError
 
-    def take_action(self, action: Optional[int] = None, remember: bool = True):
+    def take_action(self, action: Optional[int] = None, remember: bool = True, greedy: Optional[bool] = None):
         raise NotImplementedError
 
     def optimize_model(self):
@@ -48,8 +49,31 @@ class Agent:
     def reset(self):
         raise NotImplementedError
 
-    def is_success(self) -> bool:
-        raise NotImplementedError
+    def is_success(self, dist: float=.02) -> bool:
+        """
+        Checks whether the current state of the agent is successful
+        Args:
+            dist: error tolerance
+
+        Returns:
+            whether the state is considered successful
+
+        """
+        state = self.current_state.cpu().numpy().ravel()
+        x_t, y_t = state[2], state[3]
+
+        return np.linalg.norm([x_t, y_t]) < dist
+
+    def is_reachable(self):
+        """
+        Checks whether it's possible to reach the target
+
+        Returns:
+            whether the target is reachable
+
+        """
+        state = self.current_state.cpu().numpy().ravel()
+        return np.linalg.norm(state[:2]) <= 0.21
 
 
 def describe_state(obs):

@@ -13,7 +13,7 @@ class PolicyFFN(nn.Module):
         self.fc_var = nn.Linear(128, out_shape)
 
     def forward(self, x):
-        x = F.elu(self.fc1)
+        x = F.elu(self.fc1(x))
 
         mu = self.fc_mu(x)
         var = self.fc_var(x)
