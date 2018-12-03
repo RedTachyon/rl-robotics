@@ -9,13 +9,12 @@ from .agents.utils import Agent
 def train_eval_reacher_dqn(num_train: int,
                            num_test: int,
                            device: str,
-                           config: Optional[Dict] = None,
-                           viz: bool = False) -> Tuple[Agent, float, float]:
+                           config: Optional[Dict] = None) -> Tuple[Agent, float, float]:
     assert device in ('cpu', 'cuda'), "The device must be either cpu or cuda"
 
     env = pe.make('ReacherBulletEnv-v0')
-    print('Training the agent.')
-    agent = te.train_dqn_agent(env, num_train, config, device, show=True, viz=viz)
+    print('Training the agent...')
+    agent = te.train_dqn_agent(env, num_train, config, device, show=True)
     print()
     print('\nTraining finished. Evaluating performance.')
 
@@ -23,6 +22,22 @@ def train_eval_reacher_dqn(num_train: int,
 
     return agent, mean_score, success_rate
 
+
+def train_eval_reacher_vpg(num_train: int,
+                           num_test: int,
+                           device: str,
+                           config: Optional[Dict] = None) -> Tuple[Agent, float, float]:
+    assert device in ('cpu', 'cuda'), "The device must be either cpu or cuda"
+
+    env = pe.make('ReacherBulletEnv-v0')
+    print('Training the agent...')
+    agent = te.train_vpg_agent(env, num_train, config, device, show=True)
+    print()
+    print('\nTraining finished. Evaluating performance.')
+
+    mean_score, success_rate = te.evaluate_model(agent, num_test, show=True)
+
+    return agent, mean_score, success_rate
 
 # if __name__ == '__main__':
 #     config = {

@@ -62,7 +62,8 @@ class VPGAgent(Agent):
         the state of the environment.
 
         Args:
-            action: None or list[float]: if None, action is selected automatically; else, the index of the preferred action
+            action: None or list[float]: if None, action is selected automatically;
+                    else, the preferred action
             remember: bool, whether or not to store the transition
             greedy: unused
 
@@ -126,21 +127,6 @@ class VPGAgent(Agent):
         """
         self.current_state = torch.tensor([self.env.reset()], device=self.device).type(self.type)
         return self.current_state
-
-    def is_success(self, dist: float=.02) -> bool:
-        """
-        Checks whether the current state of the agent is successful
-        Args:
-            dist: error tolerance
-
-        Returns:
-            whether the state is considered successful
-
-        """
-        state = self.current_state.cpu().numpy().ravel()
-        x_t, y_t = state[2], state[3]
-
-        return np.linalg.norm([x_t, y_t]) < dist
 
     def _add_to_config(self, name, default):
         """
