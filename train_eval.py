@@ -74,12 +74,14 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[D
         x_score = np.arange(len(episode_scores))
         y_score = episode_scores
         sns.regplot(x_score, y_score, lowess=True, marker='.')
+        plt.title("Train DQN score")
         plt.show()
 
         x_success = np.arange(len(episode_successes))
         y_success = np.array(list(accumulate(episode_successes))) / (x_success + 1)
 
         sns.regplot(x_success, y_success, marker='.')
+        plt.title("Train DQN success rate")
         plt.show()
 
     return agent
@@ -87,7 +89,7 @@ def train_dqn_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[D
 
 def train_vpg_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[Dict] = None, device: str = 'cpu',
                     show: bool = True) -> Agent:
-    # TODO: implement this
+    # TODO: make it possible to use larger trajectory batches
     if config is None:
         config = dict()
 
@@ -119,13 +121,16 @@ def train_vpg_agent(env: TimeLimit, num_episodes: int = 5000, config: Optional[D
     if show:
         x_score = np.arange(len(episode_scores))
         y_score = episode_scores
+
         sns.regplot(x_score, y_score, lowess=True, marker='.')
+        plt.title("Train VPG score")
         plt.show()
 
         x_success = np.arange(len(episode_successes))
         y_success = np.array(list(accumulate(episode_successes))) / (x_success + 1)
 
         sns.regplot(x_success, y_success, marker='.')
+        plt.title("Train VPG success rate")
         plt.show()
 
     return agent
@@ -171,12 +176,14 @@ def evaluate_model(agent: Agent, num_episodes: int = 1000, show: bool = True) ->
         x_score = np.arange(len(episode_scores))
         y_score = episode_scores
         sns.regplot(x_score, y_score, lowess=True, marker='.')
+        plt.title("Test score")
         plt.show()
 
         x_success = np.arange(len(episode_successes))
         y_success = np.array(list(accumulate(episode_successes))) / (x_success + 1)
 
         sns.regplot(x_success, y_success, marker='.')
+        plt.title("Test success rate")
         plt.show()
 
     mean_score: float = test_episode_scores.mean()

@@ -51,8 +51,8 @@ class VPGAgent(Agent):
 
         dist = MultivariateNormal(loc=mu, covariance_matrix=torch.diag(var))
 
-        action = dist.sample().flatten()
-        logprob = dist.log_prob(action)
+        action = dist.sample().flatten().type(self.type)
+        logprob = dist.log_prob(action).type(self.type)
 
         return action, logprob
 

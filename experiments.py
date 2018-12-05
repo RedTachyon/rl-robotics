@@ -27,6 +27,7 @@ def train_eval_reacher_vpg(num_train: int,
                            num_test: int,
                            device: str,
                            config: Optional[Dict] = None) -> Tuple[Agent, float, float]:
+
     assert device in ('cpu', 'cuda'), "The device must be either cpu or cuda"
 
     env = pe.make('ReacherBulletEnv-v0')
