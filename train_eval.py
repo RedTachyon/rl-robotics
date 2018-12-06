@@ -16,7 +16,7 @@ from .agents.utils import Agent
 from .agents.DQN import DQNAgent
 from .agents.VPG import VPGAgent
 
-from .models.policy import PolicyFFN
+# from .models.policy import PolicyFFN
 
 sns.set()
 
