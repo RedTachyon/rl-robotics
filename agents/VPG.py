@@ -82,7 +82,7 @@ class VPGAgent(Agent):
 
         new_state = torch.tensor([new_state], device=self.device).type(self.type)
         reward = torch.tensor([reward], device=self.device).type(self.type)
-        logprob = logprob.device(self.device).type(self.type)
+        logprob = logprob.to(self.device).type(self.type)
 
         if remember and logprob is not None:
             self.rewards.append(reward)
@@ -102,7 +102,7 @@ class VPGAgent(Agent):
             R = r + GAMMA * R
             rewards.insert(0, R)
 
-        rewards = torch.tensor(rewards).device(self.device).type(self.type)
+        rewards = torch.tensor(rewards).to(self.device).type(self.type)
         # Modify rewards to advantage or something
         # rewards = (rewards - rewards.mean()) / (rewards.std() + eps)
 
